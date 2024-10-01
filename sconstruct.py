@@ -5,17 +5,20 @@ from SCons.Script.SConscript import SConsEnvironment
 
 import SCons, SCons.Script
 import sys, os, platform
-import lib_utils, lib_utils_external
+import godot_debug_draw_3d.lib_utils as lib_utils
+import godot_debug_draw_3d.lib_utils_external as lib_utils_external
 
 # Fixing the encoding of the console
 if platform.system() == "Windows":
     os.system("chcp 65001")
 
+current_dir = os.path.dirname(os.path.abspath(__file__))
 # Project config
-project_name = "Debug Draw 3D"
-lib_name = "dd3d"
-default_output_dir = os.path.join("addons", "debug_draw_3d", "libs")
-src_folder = "src"
+project_name = "godot_debug_draw_3d"
+lib_name = "godot_debug_draw_3d"
+# default_output_dir = os.path.join("addons", "godot_debug_draw_3d", "libs")
+default_output_dir = os.path.join(os.path.dirname(current_dir), "project/addons/vendor/libs")
+src_folder = os.path.join(current_dir, "src")
 
 # If necessary, add patches from the code
 patches_to_apply = [
@@ -127,45 +130,21 @@ def generate_sources_for_resources(env, src_out):
     print("The generation of C++ sources with the contents of resources has been completed")
     print()
 
+# args = ARGUMENTS
+def configure_environment(env: SConsEnvironment, args) -> str:
+    os.chdir(current_dir)
+    additional_src = []
+    setup_options(env, args)
+    setup_defines_and_flags(env, additional_src)
+    generate_sources_for_resources(env, additional_src)
 
-def apply_patches(target, source, env: SConsEnvironment):
-    return lib_utils_external.apply_git_patches(env, patches_to_apply, "godot-cpp")
+    extra_tags = ""
+    if "release" in env["target"] and env["force_enabled_dd3d"]:
+        extra_tags += ".enabled"
 
-
-def get_android_toolchain() -> str:
-    sys.path.insert(0, "godot-cpp/tools")
-    import android
-
-    sys.path.pop(0)
-    return os.path.join(android.get_android_ndk_root(env), "build/cmake/android.toolchain.cmake")
-
-
-# Additional build of the projects via CMake
-# def build_cmake(target, source, env: SConsEnvironment):
-#    extra_flags = []
-#    if env["platform"] in ["macos", "ios"]:
-#        extra_flags += ["-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64", "-DCMAKE_OSX_DEPLOYMENT_TARGET=10.14"]
-#    if env["platform"] in ["android"]:
-#        extra_flags += [f"-DCMAKE_TOOLCHAIN_FILE={get_android_toolchain()}"]
-#    return lib_utils_external.cmake_build_project(env, "project", extra_flags)
-
-env: SConsEnvironment = SConscript("godot-cpp/SConstruct")
-env = env.Clone()
-
-args = ARGUMENTS
-additional_src = []
-setup_options(env, args)
-setup_defines_and_flags(env, additional_src)
-generate_sources_for_resources(env, additional_src)
-
-extra_tags = ""
-if "release" in env["target"] and env["force_enabled_dd3d"]:
-    extra_tags += ".enabled"
-
-lib_utils.get_library_object(
-    env, project_name, lib_name, extra_tags, env["addon_output_dir"], src_folder, additional_src
-)
-
-# Register console commands
-env.Command("apply_patches", [], apply_patches)
-# env.Command("build_cmake", [], build_cmake)
+    libname = lib_utils.get_library_object(
+        env, project_name, lib_name, extra_tags, env["addon_output_dir"], src_folder, additional_src
+    )
+    # trick with os.chdir to avoid having to change this recipe too much
+    os.chdir(os.path.dirname(os.getcwd()))
+    return libname

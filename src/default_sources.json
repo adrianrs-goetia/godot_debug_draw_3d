@@ -18,5 +18,6 @@
   "editor/generate_csharp_bindings.cpp",
   "register_types.cpp",
   "utils/math_utils.cpp",
-  "utils/utils.cpp"
+  "utils/utils.cpp",
+  "api.cpp"
 ]

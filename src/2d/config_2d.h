@@ -1,7 +1,7 @@
 #pragma once
 
-#include "common/colors.h"
-#include "utils/compiler.h"
+#include "../common/colors.h"
+#include "../utils/compiler.h"
 
 #include <functional>
 

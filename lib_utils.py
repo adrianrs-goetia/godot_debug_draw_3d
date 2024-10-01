@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
 from SCons.Script.SConscript import SConsEnvironment
-from patches import unity_tools
+from godot_debug_draw_3d.patches import unity_tools
 
 import SCons
 import os, json, re
 
+current_dir = os.path.dirname(os.path.abspath(__file__))
 
 def get_sources(src: list, src_folder: str, lib_name: str = "unity_"):
     res = [os.path.join(src_folder, file) for file in src]
@@ -13,20 +14,14 @@ def get_sources(src: list, src_folder: str, lib_name: str = "unity_"):
     return res
 
 
-def get_library_object(env: SConsEnvironment, project_name: str, lib_name: str, extra_tags: str, output_path: str, src_folder: str, additional_src: list) -> str:
-    env.Append(CPPPATH=src_folder)
+def get_library_object(env: SConsEnvironment, project_name: str, lib_name: str, extra_tags: str, output_path: str, src_folder: str, additional_src: list):
+    current_cpppath: list = env['CPPPATH']
+    public_api = os.path.join(os.path.dirname(src_folder), 'include')
+    env.Append(CPPPATH=[src_folder, public_api])
 
     src = []
     with open(src_folder + "/default_sources.json") as f:
         src = json.load(f)
-
-    scons_cache_path = os.environ.get("SCONS_CACHE")
-    if scons_cache_path is None:
-        # store all obj's in a dedicated folder
-        env["SHOBJPREFIX"] = "#obj/"
-    else:
-        env.CacheDir(scons_cache_path)
-        env.Decider("MD5")
 
     # some additional tags if needed
     additional_tags = ""
@@ -34,20 +29,16 @@ def get_library_object(env: SConsEnvironment, project_name: str, lib_name: str, 
     if env["platform"] == "web" and env.get("threads", True):
         additional_tags = ".threads"
 
-    lib_filename = "lib{}.{}.{}.{}{}".format(lib_name, env["platform"], env["target"], env["arch"], additional_tags + extra_tags) + env["SHLIBSUFFIX"]
+    lib_filename = env.File("lib{}.{}.{}.{}{}".format(lib_name, env["platform"], env["target"], env["arch"], additional_tags + extra_tags) + env["SHLIBSUFFIX"])
 
-    if env["platform"] == "macos":
-        generate_framework_folder(env, project_name, lib_name, lib_filename, output_path)
-        lib_filename = os.path.join(output_path, os.path.splitext(lib_filename)[0] + ".framework", lib_filename)
-    else:
-        lib_filename = os.path.join(output_path, lib_filename)
-
-    env.Default(
-        env.SharedLibrary(
-            target=env.File(lib_filename),
-            source=get_sources(additional_src + src, src_folder, lib_name)
-        )
+    env.SharedLibrary(
+        target=lib_filename,
+        source=get_sources(additional_src + src, src_folder, lib_name)
     )
+
+    current_cpppath.append(public_api)
+    current_cpppath.append(src_folder)
+    env["CPPPATH"] = current_cpppath
 
     return lib_filename
 

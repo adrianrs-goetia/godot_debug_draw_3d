@@ -1,8 +1,3 @@
-[submodule "godot-cpp"]
-	path = godot-cpp
-	url = https://github.com/godotengine/godot-cpp.git
-	branch = 4.1
-	
 [submodule "src/thirdparty/tracy"]
 	path = src/thirdparty/tracy
 	url = https://github.com/wolfpld/tracy.git
