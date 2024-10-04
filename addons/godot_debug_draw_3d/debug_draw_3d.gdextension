@@ -58,10 +58,15 @@ ios.template_release.forced_libgodot_debug_draw_3d = {}
 
 ; -------------------------------------
 ; debug
-
 macos = "libs/libgodot_debug_draw_3d.macos.editor.universal.framework"
 windows.x86_64 = "libs/libgodot_debug_draw_3d.windows.editor.x86_64.dll"
 linux.x86_64 = "libs/libgodot_debug_draw_3d.linux.editor.x86_64.so"
+
+; -------------------------------------
+; template_debug
+macos.template_debug = "libs/libgodot_debug_draw_3d.macos.template_debug.universal.framework"
+windows.template_debug.x86_64 = "libs/libgodot_debug_draw_3d.windows.template_debug.x86_64.dll"
+linux.template_debug.x86_64 = "libs/libgodot_debug_draw_3d.linux.template_debug.x86_64.so"
 
 web.wasm32.nothreads = "libs/libgodot_debug_draw_3d.web.template_debug.wasm32.wasm"
 web.wasm32 = "libs/libgodot_debug_draw_3d.web.template_debug.wasm32.threads.wasm"
